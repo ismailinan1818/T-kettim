@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TüketimX</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #F5F3EE; --card: #FFFFFF;
+  --green: #7BAF96; --green-light: #E8F2EC;
+  --blue: #6B9AB8; --blue-light: #E4EEF6;
+  --orange: #E8956D; --orange-light: #FAEAE0;
+  --text: #2A2A2A; --text-mid: #6B6B6B; --text-soft: #A8A8A8;
+  --border: #EBEBEB; --warn: #C96A5A; --warn-bg: #FAEDEA;
+  --radius: 16px; --radius-sm: 10px;
+}
+body { font-family:'Inter',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; max-width:430px; margin:0 auto; overflow-x:hidden; }
+
+.screen { display:none; min-height:100vh; padding-bottom:90px; animation:fadeIn 0.2s ease; }
+.screen.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+.header { padding:48px 20px 14px; background:var(--bg); position:sticky; top:0; z-index:10; }
+.header-top { display:flex; justify-content:space-between; align-items:center; }
+.header-greeting { font-size:13px; color:var(--text-mid); }
+.header-name { font-size:22px; font-weight:700; margin-top:2px; }
+.header-avatar { width:40px; height:40px; border-radius:50%; background:var(--green); display:flex; align-items:center; justify-content:center; font-size:15px; font-weight:600; color:white; }
+.date-badge { display:inline-flex; align-items:center; gap:5px; background:var(--card); border-radius:20px; padding:5px 12px; font-size:12px; font-weight:500; color:var(--text-mid); margin-top:10px; border:1px solid var(--border); }
+.page-header { padding:48px 20px 14px; display:flex; align-items:center; gap:12px; }
+.back-btn { width:36px; height:36px; border-radius:10px; background:var(--card); border:1px solid var(--border); display:flex; align-items:center; justify-content:center; font-size:18px; cursor:pointer; flex-shrink:0; }
+.page-title { font-size:20px; font-weight:700; }
+
+.alert-band { margin:8px 20px 0; background:var(--warn-bg); border-left:3px solid var(--warn); border-radius:var(--radius-sm); padding:10px 14px; display:flex; align-items:center; gap:8px; font-size:13px; color:var(--warn); font-weight:500; }
+.alert-band .dot { width:7px; height:7px; border-radius:50%; background:var(--warn); animation:blink 1.4s ease-in-out infinite; flex-shrink:0; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+.section { padding:18px 20px 0; }
+.section-label { font-size:11px; font-weight:600; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-soft); margin-bottom:12px; }
+
+.today-cards { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.today-cards .card-wide { grid-column:1/-1; }
+.today-card { background:var(--card); border-radius:var(--radius); padding:16px; position:relative; overflow:hidden; cursor:pointer; transition:transform 0.15s; }
+.today-card:active { transform:scale(0.97); }
+.today-card::before { content:''; position:absolute; top:0; right:0; width:70px; height:70px; border-radius:0 var(--radius) 0 70px; opacity:0.13; }
+.today-card.green::before { background:var(--green); }
+.today-card.blue::before  { background:var(--blue); }
+.today-card.orange::before{ background:var(--orange); }
+.card-icon { width:32px; height:32px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:16px; margin-bottom:12px; }
+.card-icon.green  { background:var(--green-light); }
+.card-icon.blue   { background:var(--blue-light); }
+.card-icon.orange { background:var(--orange-light); }
+.card-label { font-size:11px; color:var(--text-soft); font-weight:500; margin-bottom:4px; }
+.card-value { font-size:22px; font-weight:700; letter-spacing:-0.5px; }
+.card-value.wide { font-size:28px; }
+.card-sub { font-size:12px; color:var(--text-mid); margin-top:4px; }
+.card-sub .up { color:var(--warn); }
+.card-sub .down { color:var(--green); }
+
+.chart-card { background:var(--card); border-radius:var(--radius); padding:16px; }
+.chart-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.chart-title { font-size:14px; font-weight:600; }
+.chart-legend { display:flex; gap:10px; }
+.legend-item { display:flex; align-items:center; gap:4px; font-size:11px; color:var(--text-mid); }
+.legend-dot { width:7px; height:7px; border-radius:50%; }
+.chart-bars { display:flex; align-items:flex-end; gap:6px; height:80px; }
+.bar-group { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; height:100%; justify-content:flex-end; }
+.bar-stack { width:100%; display:flex; flex-direction:column; gap:1px; align-items:center; justify-content:flex-end; height:70px; }
+.bar { width:100%; border-radius:4px 4px 0 0; }
+.bar.green  { background:var(--green); opacity:0.85; }
+.bar.blue   { background:var(--blue); opacity:0.85; }
+.bar.orange { background:var(--orange); opacity:0.85; }
+.bar-day { font-size:10px; color:var(--text-soft); margin-top:5px; }
+.bar-day.today { color:var(--text); font-weight:600; }
+
+.records-list { display:flex; flex-direction:column; gap:8px; }
+.record-item { background:var(--card); border-radius:var(--radius-sm); padding:13px 14px; display:flex; align-items:center; gap:12px; cursor:pointer; transition:transform 0.15s; }
+.record-item:active { transform:scale(0.98); }
+.record-thumb { width:42px; height:42px; border-radius:9px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px; overflow:hidden; }
+.record-thumb.green-bg  { background:var(--green-light); }
+.record-thumb.blue-bg   { background:var(--blue-light); }
+.record-thumb.orange-bg { background:var(--orange-light); }
+.record-thumb img { width:42px; height:42px; object-fit:cover; border-radius:9px; }
+.record-info { flex:1; min-width:0; }
+.record-title { font-size:14px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.record-meta  { font-size:12px; color:var(--text-soft); margin-top:2px; }
+.record-amount { font-size:15px; font-weight:600; white-space:nowrap; }
+.record-amount.green  { color:var(--green); }
+.record-amount.blue   { color:var(--blue); }
+.record-amount.orange { color:var(--orange); }
+
+.analyze-btn-wrap { padding:20px; }
+.analyze-btn { width:100%; background:var(--text); color:white; border:none; border-radius:var(--radius); padding:16px; font-size:15px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; transition:opacity 0.2s; }
+.analyze-btn:active { opacity:0.8; }
+
+.bottom-nav { position:fixed; bottom:0; left:50%; transform:translateX(-50%); width:100%; max-width:430px; background:var(--card); border-top:1px solid var(--border); display:flex; padding:10px 0 20px; z-index:100; }
+.nav-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 0; transition:opacity 0.15s; }
+.nav-item:active { opacity:0.6; }
+.nav-icon { font-size:22px; line-height:1; }
+.nav-label { font-size:10px; color:var(--text-soft); font-weight:400; }
+.nav-item.active .nav-label { color:var(--text); font-weight:600; }
+.nav-add { flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; cursor:pointer; padding:4px 0; }
+.nav-add-circle { width:44px; height:44px; border-radius:50%; background:var(--text); display:flex; align-items:center; justify-content:center; font-size:24px; color:white; margin-top:-18px; box-shadow:0 4px 16px rgba(0,0,0,0.18); transition:transform 0.15s; }
+.nav-add-circle:active { transform:scale(0.9); }
+.nav-add .nav-label { color:var(--text-soft); font-size:10px; }
+
+.photo-area { margin:0 20px; background:var(--card); border:2px dashed var(--border); border-radius:var(--radius); padding:32px 20px; display:flex; flex-direction:column; align-items:center; gap:10px; cursor:pointer; }
+.photo-area.has-photo { padding:0; border-style:solid; }
+.photo-area img { width:100%; border-radius:calc(var(--radius) - 2px); display:block; max-height:220px; object-fit:cover; }
+.photo-area-icon { font-size:36px; }
+.photo-area-text { font-size:14px; color:var(--text-mid); font-weight:500; }
+.photo-area-sub  { font-size:12px; color:var(--text-soft); }
+.photo-btns { display:flex; gap:10px; margin:10px 20px 0; }
+.photo-btn { flex:1; background:var(--card); border:1px solid var(--border); border-radius:var(--radius-sm); padding:12px; font-size:13px; font-weight:500; font-family:'Inter',sans-serif; color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; }
+.photo-btn:active { background:var(--bg); }
+
+.form-card { margin:12px 20px 0; background:var(--card); border-radius:var(--radius); padding:16px; display:flex; flex-direction:column; gap:14px; }
+.form-field label { display:block; font-size:11px; font-weight:600; color:var(--text-soft); letter-spacing:0.06em; text-transform:uppercase; margin-bottom:6px; }
+.form-field input, .form-field select, .form-field textarea { width:100%; border:1px solid var(--border); border-radius:var(--radius-sm); padding:11px 13px; font-size:16px; font-family:'Inter',sans-serif; color:var(--text); background:var(--bg); outline:none; transition:border-color 0.2s; }
+.form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color:var(--green); }
+.form-field textarea { resize:none; height:72px; }
+.cat-pills { display:flex; flex-wrap:wrap; gap:8px; }
+.cat-pill { padding:7px 14px; border-radius:20px; font-size:13px; border:1.5px solid var(--border); cursor:pointer; background:transparent; font-family:'Inter',sans-serif; color:var(--text-mid); transition:all 0.15s; }
+.cat-pill.active.green  { background:var(--green-light); border-color:var(--green); color:var(--green); font-weight:600; }
+.cat-pill.active.blue   { background:var(--blue-light); border-color:var(--blue); color:var(--blue); font-weight:600; }
+.cat-pill.active.orange { background:var(--orange-light); border-color:var(--orange); color:var(--orange); font-weight:600; }
+.save-btn { margin:16px 20px; width:calc(100% - 40px); background:var(--green); color:white; border:none; border-radius:var(--radius); padding:16px; font-size:15px; font-weight:600; font-family:'Inter',sans-serif; cursor:pointer; transition:opacity 0.2s; }
+.save-btn:active { opacity:0.8; }
+.hidden-input { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; opacity:0; }
+
+.filter-bar { display:flex; gap:8px; padding:12px 20px 0; overflow-x:auto; }
+.filter-bar::-webkit-scrollbar { display:none; }
+.filter-chip { padding:6px 14px; border-radius:20px; font-size:12px; border:1.5px solid var(--border); cursor:pointer; white-space:nowrap; background:transparent; font-family:'Inter',sans-serif; color:var(--text-mid); transition:all 0.15s; }
+.filter-chip.active { background:var(--text); color:white; border-color:var(--text); }
+
+.analysis-loading { display:none; flex-direction:column; align-items:center; gap:14px; padding:40px 20px; text-align:center; }
+.analysis-loading.show { display:flex; }
+.spinner { width:40px; height:40px; border:3px solid var(--border); border-top-color:var(--green); border-radius:50%; animation:spin 0.8s linear infinite; }
+@keyframes spin { to{transform:rotate(360deg)} }
+.analysis-loading p { font-size:14px; color:var(--text-mid); }
+.advice-cards { display:flex; flex-direction:column; gap:10px; }
+.advice-card { background:var(--card); border-radius:var(--radius); padding:16px; border-left:4px solid var(--green); }
+.advice-card.warn { border-left-color:var(--warn); }
+.advice-card.blue { border-left-color:var(--blue); }
+.advice-title { font-size:13px; font-weight:600; margin-bottom:6px; }
+.advice-text  { font-size:13px; color:var(--text-mid); line-height:1.6; }
+
+.toast { position:fixed; bottom:100px; left:50%; transform:translateX(-50%) translateY(20px); background:var(--text); color:white; padding:12px 20px; border-radius:24px; font-size:14px; font-weight:500; opacity:0; transition:all 0.3s; z-index:999; white-space:nowrap; }
+.toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:200; align-items:flex-end; justify-content:center; }
+.modal-overlay.show { display:flex; }
+.modal-sheet { background:var(--card); border-radius:20px 20px 0 0; width:100%; max-width:430px; padding:20px; animation:slideUp 0.25s ease; }
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 18px; }
+.modal-title { font-size:16px; font-weight:700; margin-bottom:14px; }
+.modal-opts { display:flex; flex-direction:column; gap:8px; }
+.modal-opt { padding:14px; border-radius:var(--radius-sm); border:1.5px solid var(--border); font-size:14px; font-weight:500; cursor:pointer; display:flex; align-items:center; gap:10px; background:transparent; font-family:'Inter',sans-serif; color:var(--text); }
+.modal-opt:active { background:var(--bg); }
+.modal-cancel { margin-top:10px; width:100%; padding:14px; border-radius:var(--radius-sm); border:none; font-size:14px; font-weight:600; color:var(--warn); background:var(--warn-bg); font-family:'Inter',sans-serif; cursor:pointer; }
+</style>
+</head>
+<body>
+
+<!-- DASHBOARD -->
+<div id="screen-dashboard" class="screen active">
+  <div class="header">
+    <div class="header-top">
+      <div>
+        <div class="header-greeting">Merhaba 👋</div>
+        <div class="header-name" id="dashName">İsmail</div>
+      </div>
+      <div class="header-avatar" id="dashAvatar">İ</div>
+    </div>
+    <div class="date-badge" id="dateBadge">📅 ...</div>
+  </div>
+  <div class="alert-band" id="alertBand" style="display:none">
+    <span class="dot"></span>
+    <span id="alertText"></span>
+  </div>
+  <div class="section">
+    <div class="section-label">Bugün</div>
+    <div class="today-cards">
+      <div class="today-card orange card-wide" onclick="showToast('Harcama detayları yakında')">
+        <div class="card-icon orange">🛒</div>
+        <div class="card-label">Toplam Harcama</div>
+        <div class="card-value wide" id="totalSpend">₺0,00</div>
+        <div class="card-sub"><span id="spendCount">0 işlem</span> · <span class="up" id="spendTrend"></span></div>
+      </div>
+      <div class="today-card green" onclick="showToast('Beslenme detayları yakında')">
+        <div class="card-icon green">🥗</div>
+        <div class="card-label">Kalori</div>
+        <div class="card-value" id="totalCal">0</div>
+        <div class="card-sub" id="calLeft"></div>
+      </div>
+      <div class="today-card blue" onclick="showToast('Enerji detayları yakında')">
+        <div class="card-icon blue">⚡</div>
+        <div class="card-label">Enerji</div>
+        <div class="card-value">14,2 kWh</div>
+        <div class="card-sub">Normale yakın</div>
+      </div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Bu Hafta</div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <div class="chart-title">Tüketim Trendi</div>
+        <div class="chart-legend">
+          <div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Harcama</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Kalori</div>
+          <div class="legend-item"><div class="legend-dot" style="background:var(--blue)"></div>Enerji</div>
+        </div>
+      </div>
+      <div class="chart-bars" id="chartBars"></div>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-label">Son Kayıtlar</div>
+    <div class="records-list" id="recentRecords">
+      <div style="text-align:center;padding:24px;color:var(--text-soft);font-size:13px;">Henüz kayıt yok. + butonuna basarak başla.</div>
+    </div>
+  </div>
+  <div class="analyze-btn-wrap">
+    <button class="analyze-btn" onclick="goScreen('screen-analysis')">✦ Haftalık Analiz Al</button>
+  </div>
+</div>
+
+<!-- YENİ KAYIT -->
+<div id="screen-new" class="screen">
+  <div class="page-header">
+    <div class="back-btn" onclick="goScreen('screen-dashboard')">←</div>
+    <div class="page-title">Yeni Kayıt</div>
+  </div>
+  <div class="photo-area" id="photoArea" onclick="openGallery()">
+    <div class="photo-area-icon">📷</div>
+    <div class="photo-area-text">Fotoğraf Çek veya Seç</div>
+    <div class="photo-area-sub">Aşağıdaki butonları kullan</div>
+  </div>
+  <input type="file" id="fileInput" class="hidden-input" accept="image/*" onchange="handlePhoto(event)">
+  <input type="file" id="cameraInput" class="hidden-input" accept="image/*" capture onchange="handlePhoto(event)">
+  <div class="photo-btns">
+    <button class="photo-btn" onclick="openCamera()">📷 Kamera</button>
+    <button class="photo-btn" onclick="openGallery()">🖼️ Galeri</button>
+  </div>
+  <div class="form-card">
+    <div class="form-field">
+      <label>Kategori</label>
+      <div class="cat-pills">
+        <button class="cat-pill active orange" onclick="selectCat(this,'Harcama','orange')">🛒 Harcama</button>
+        <button class="cat-pill green" onclick="selectCat(this,'Beslenme','green')">🥗 Beslenme</button>
+        <button class="cat-pill blue" onclick="selectCat(this,'Enerji','blue')">⚡ Enerji</button>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Alt Kategori</label>
+      <select id="subCat">
+        <option>Market</option><option>Restoran</option><option>Online Alışveriş</option>
+        <option>Ulaşım</option><option>Sağlık</option><option>Giyim</option>
+        <option>Eğlence</option><option>Diğer</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>Tutar / Miktar</label>
+      <input type="text" id="amountInput" placeholder="₺0,00 veya kcal veya kWh">
+    </div>
+    <div class="form-field">
+      <label>Tarih &amp; Saat</label>
+      <input type="datetime-local" id="dateInput">
+    </div>
+    <div class="form-field">
+      <label>Not (opsiyonel)</label>
+      <textarea id="noteInput" placeholder="Eklemek istediğin bir şey..."></textarea>
+    </div>
+  </div>
+  <div id="receiptTableWrap" style="display:none;margin:0 20px 0;background:var(--card);border-radius:var(--radius);overflow:hidden;"></div>
+  <button class="save-btn" id="saveBtnMain" onclick="saveRecord()">Kaydet</button>
+</div>
+
+<!-- ARŞİV -->
+<div id="screen-archive" class="screen">
+  <div class="page-header">
+    <div class="back-btn" onclick="goScreen('screen-dashboard')">←</div>
+    <div class="page-title">Arşiv</div>
+  </div>
+  <div class="filter-bar">
+    <button class="filter-chip active" onclick="filterArchive('Tümü',this)">Tümü</button>
+    <button class="filter-chip" onclick="filterArchive('Harcama',this)">🛒 Harcama</button>
+    <button class="filter-chip" onclick="filterArchive('Beslenme',this)">🥗 Beslenme</button>
+    <button class="filter-chip" onclick="filterArchive('Enerji',this)">⚡ Enerji</button>
+  </div>
+  <div class="section" style="padding-top:14px;">
+    <div class="records-list" id="archiveList">
+      <div style="text-align:center;padding:40px;color:var(--text-soft);font-size:13px;">Kayıt bulunamadı.</div>
+    </div>
+  </div>
+</div>
+
+<!-- ANALİZ -->
+<div id="screen-analysis" class="screen">
+  <div class="page-header">
+    <div class="back-btn" onclick="goScreen('screen-dashboard')">←</div>
+    <div class="page-title">Analiz &amp; Tavsiyeler</div>
+  </div>
+  <div class="section">
+    <div style="padding-bottom:16px;">
+      <button class="analyze-btn" onclick="runAnalysis()">✦ <span id="analysisBtnTxt">Analiz Al</span></button>
+    </div>
+    <div class="analysis-loading" id="analysisLoading">
+      <div class="spinner"></div>
+      <p>Veriler hazırlanıyor, AI analiz yapıyor…</p>
+    </div>
+    <div class="advice-cards" id="adviceCards"></div>
+  </div>
+</div>
+
+<!-- AYARLAR -->
+<div id="screen-settings" class="screen">
+  <div class="page-header">
+    <div class="back-btn" onclick="goScreen('screen-dashboard')">←</div>
+    <div class="page-title">Ayarlar</div>
+  </div>
+  <div class="section">
+    <div class="form-card">
+      <div class="form-field">
+        <label>İsim</label>
+        <input type="text" id="userName" placeholder="İsmail">
+      </div>
+      <div class="form-field">
+        <label>Aylık Bütçe Hedefi (₺)</label>
+        <input type="number" id="budgetGoal" placeholder="10000">
+      </div>
+      <div class="form-field">
+        <label>Günlük Kalori Hedefi</label>
+        <input type="number" id="calGoal" placeholder="2000">
+      </div>
+    </div>
+    <button class="save-btn" onclick="saveSettings()">Kaydet</button>
+  </div>
+</div>
+
+<!-- ALT NAVİGASYON -->
+<div class="bottom-nav">
+  <div class="nav-item active" id="nav-dashboard" onclick="goScreen('screen-dashboard')">
+    <div class="nav-icon">⊞</div>
+    <div class="nav-label">Ana Sayfa</div>
+  </div>
+  <div class="nav-item" id="nav-archive" onclick="goScreen('screen-archive')">
+    <div class="nav-icon">📁</div>
+    <div class="nav-label">Arşiv</div>
+  </div>
+  <div class="nav-add" onclick="goScreen('screen-new')">
+    <div class="nav-add-circle">＋</div>
+    <div class="nav-label">Ekle</div>
+  </div>
+  <div class="nav-item" id="nav-analysis" onclick="goScreen('screen-analysis')">
+    <div class="nav-icon">📊</div>
+    <div class="nav-label">Analiz</div>
+  </div>
+  <div class="nav-item" id="nav-settings" onclick="goScreen('screen-settings')">
+    <div class="nav-icon">⚙️</div>
+    <div class="nav-label">Ayarlar</div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="photoModal" onclick="closeModal()">
+  <div class="modal-sheet" onclick="event.stopPropagation()">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Fotoğraf Ekle</div>
+    <div class="modal-opts">
+      <button class="modal-opt" onclick="openCamera()">📷 Kamera ile Çek</button>
+      <button class="modal-opt" onclick="openGallery()">🖼️ Galeriden Seç / Ekran Görüntüsü</button>
+    </div>
+    <button class="modal-cancel" onclick="closeModal()">İptal</button>
+  </div>
+</div>
+
+<script>
+let records = JSON.parse(localStorage.getItem('tx_records') || '[]');
+let isScanning = false;
+let currentReceiptItems = [];
+let currentMagaza = '';
+let currentReceiptMeta = {};
+let settings = JSON.parse(localStorage.getItem('tx_settings') || '{"name":"İsmail","budget":10000,"cal":2000}');
+let selectedCat = 'Harcama';
+let selectedCatColor = 'orange';
+let currentPhoto = null;
+let currentFilter = 'Tümü';
+
+function goScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const map = {'screen-dashboard':'nav-dashboard','screen-archive':'nav-archive','screen-analysis':'nav-analysis','screen-settings':'nav-settings'};
+  if (map[id]) document.getElementById(map[id]).classList.add('active');
+  window.scrollTo(0,0);
+  if (id==='screen-dashboard') { updateDashboard(); buildChart(); }
+  if (id==='screen-archive') renderArchive();
+  if (id==='screen-new') resetForm();
+  if (id==='screen-settings') loadSettings();
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function triggerPhoto() { document.getElementById('photoModal').classList.add('show'); }
+function closeModal() { document.getElementById('photoModal').classList.remove('show'); }
+function openCamera() { closeModal(); document.getElementById('cameraInput').click(); }
+function openGallery() { closeModal(); document.getElementById('fileInput').click(); }
+
+function compressImage(file, maxDim, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = ev => {
+      const img = new Image();
+      img.onload = () => {
+        let w = img.width, h = img.height;
+        if (w > h && w > maxDim) { h = Math.round(h * maxDim / w); w = maxDim; }
+        else if (h > maxDim) { w = Math.round(w * maxDim / h); h = maxDim; }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = reject;
+      img.src = ev.target.result;
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+async function handlePhoto(e) {
+  const file = e.target.files[0];
+  e.target.value = '';
+  if (!file) return;
+  if (!file.type.startsWith('image/')) { showToast('Lütfen bir görsel dosyası seç'); return; }
+
+  const area = document.getElementById('photoArea');
+  area.classList.add('has-photo');
+  area.style.position = 'relative';
+  area.innerHTML = '<div style="padding:40px 0;text-align:center;color:var(--text-mid);font-size:13px;">📷 Fotoğraf hazırlanıyor…</div>';
+
+  try {
+    // İki versiyon: AI analizi için yüksek kalite (max 1600px), kayıt için küçük thumbnail (max 700px)
+    const analysisPhoto = await compressImage(file, 1600, 0.85);
+    const thumbPhoto = await compressImage(file, 700, 0.6);
+    currentPhoto = thumbPhoto;
+    isScanning = true;
+
+    area.innerHTML = '<img src="' + thumbPhoto + '" alt="Fotoğraf" style="width:100%;max-height:220px;object-fit:cover;border-radius:14px;display:block;"><div style="position:absolute;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.65);color:white;padding:7px 16px;border-radius:20px;font-size:12px;font-weight:500;white-space:nowrap;" id="scanOverlay">🔍 Fiş okunuyor…</div>';
+    const btn = document.getElementById('saveBtnMain');
+    if (btn) { btn.disabled=true; btn.textContent='Analiz bekleniyor…'; btn.style.opacity='0.5'; }
+    analyzeReceipt(analysisPhoto);
+  } catch(err) {
+    console.error('Fotoğraf işleme hatası:', err);
+    showToast('Fotoğraf yüklenemedi, tekrar dene');
+    area.classList.remove('has-photo');
+    area.innerHTML = '<div class="photo-area-icon">📷</div><div class="photo-area-text">Fotoğraf Çek veya Seç</div><div class="photo-area-sub">Fiş, fatura veya ekran görüntüsü</div>';
+  }
+}
+
+async function analyzeReceipt(base64) {
+  const base64Data = base64.split(',')[1];
+  const mimeType = base64.split(';')[0].split(':')[1];
+  const prompt = `Bu bir fiş, fatura veya alışveriş ekran görüntüsü. Tüm ürün kalemlerini detaylı çıkar.
+SADECE aşağıdaki JSON formatında döndür, başka hiçbir şey yazma:
+{
+  "magaza": "mağaza adı",
+  "tarih": "YYYY-MM-DDTHH:mm veya boş",
+  "toplam": "sadece rakam örn 142.50",
+  "kdv": "KDV tutarı rakam veya boş",
+  "indirim_toplam": "toplam indirim rakam veya boş",
+  "kategori": "Market veya Restoran veya Online Alışveriş veya Ulaşım veya Sağlık veya Giyim veya Eğlence veya Diğer",
+  "urunler": [
+    {
+      "ad": "ürün adı",
+      "miktar": "adet veya kg/gr miktarı rakam",
+      "birim": "adet veya kg veya gr veya lt veya paket",
+      "birim_fiyat": "rakam",
+      "indirim": "indirim tutarı rakam veya 0",
+      "toplam": "satır toplamı rakam",
+      "kat": "Gıda veya İçecek veya Temizlik veya Kişisel Bakım veya Elektronik veya Giyim veya Diğer"
+    }
+  ]
+}
+Fişte olmayan alanları boş bırak. Tüm ürünleri eksiksiz listele.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: [
+            { type: 'image', source: { type: 'base64', media_type: mimeType, data: base64Data } },
+            { type: 'text', text: prompt }
+          ]
+        }]
+      })
+    });
+
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+
+    const raw = (data.content?.[0]?.text || '{}').replace(/```json|```/g, '').trim();
+    const info = JSON.parse(raw);
+
+    if (info.toplam) document.getElementById('amountInput').value = '₺' + info.toplam;
+    if (info.tarih && info.tarih.length >= 10) document.getElementById('dateInput').value = info.tarih.slice(0, 16);
+    const noteParts = [info.magaza].filter(Boolean);
+    if (noteParts.length) document.getElementById('noteInput').value = noteParts.join(' — ');
+    if (info.kategori) {
+      const sub = document.getElementById('subCat');
+      for (let o of sub.options) {
+        if (o.value === info.kategori) { sub.value = info.kategori; break; }
+      }
+    }
+    currentReceiptItems = info.urunler || [];
+    currentMagaza = info.magaza || '';
+    currentReceiptMeta = { kdv: info.kdv, indirim: info.indirim_toplam, tarih: info.tarih };
+    renderReceiptTable(info);
+
+    const overlay = document.getElementById('scanOverlay');
+    if (overlay) overlay.remove();
+    isScanning = false;
+    const btn = document.getElementById('saveBtnMain');
+    if (btn) { btn.disabled=false; btn.textContent='Kaydet'; btn.style.opacity='1'; }
+    showToast('Fiş okundu ✓ Kontrol edip kaydet');
+  } catch(err) {
+    console.error('Fiş okuma hatası:', err);
+    isScanning = false;
+    const btn = document.getElementById('saveBtnMain');
+    if (btn) { btn.disabled=false; btn.textContent='Kaydet'; btn.style.opacity='1'; }
+    const overlay = document.getElementById('scanOverlay');
+    if (overlay) overlay.textContent = '⚠️ ' + (err.message || 'Okunamadı');
+    showToast('Hata: ' + (err.message || 'Fiş okunamadı'));
+  }
+}
+
+function selectCat(btn, cat, color) {
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active','green','blue','orange'));
+  btn.classList.add('active', color);
+  selectedCat = cat; selectedCatColor = color;
+  const opts = {
+    'Harcama':['Market','Restoran','Online Alışveriş','Ulaşım','Sağlık','Giyim','Eğlence','Diğer'],
+    'Beslenme':['Kahvaltı','Öğle Yemeği','Akşam Yemeği','Atıştırmalık','İçecek'],
+    'Enerji':['Elektrik','Su','Doğalgaz','Yakıt']
+  };
+  document.getElementById('subCat').innerHTML = opts[cat].map(o => '<option>'+o+'</option>').join('');
+}
+
+function saveRecord() {
+  const amount = document.getElementById('amountInput').value.trim();
+  if (!amount) { showToast('Tutar / miktar giriniz'); return; }
+  if (isScanning) { showToast('Fiş hâlâ okunuyor, lütfen bekle…'); return; }
+
+  const r = {
+    id: Date.now(), cat: selectedCat, catColor: selectedCatColor,
+    subCat: document.getElementById('subCat').value, amount,
+    date: document.getElementById('dateInput').value || new Date().toISOString(),
+    note: document.getElementById('noteInput').value, photo: currentPhoto,
+    receiptItems: currentReceiptItems, magaza: currentMagaza, receiptMeta: currentReceiptMeta
+  };
+
+  records.unshift(r);
+
+  if (!persistRecords()) {
+    // Depolama doldu — fotoğrafsız tekrar dene
+    records[0] = { ...records[0], photo: null };
+    if (!persistRecords()) {
+      records.shift();
+      showToast('Depolama dolu. Eski kayıtları arşivden sil.');
+      return;
+    }
+    showToast('Kayıt eklendi (depolama doluydu, fotoğraf kaydedilemedi)');
+  } else {
+    showToast('Kayıt eklendi ✓');
+  }
+  setTimeout(() => goScreen('screen-dashboard'), 700);
+}
+
+function persistRecords() {
+  try {
+    localStorage.setItem('tx_records', JSON.stringify(records));
+    return true;
+  } catch(err) {
+    console.error('localStorage hatası:', err);
+    return false;
+  }
+}
+
+function renderReceiptTable(info) {
+  const wrap = document.getElementById('receiptTableWrap');
+  if (!wrap) return;
+  const urunler = info.urunler || [];
+  if (!urunler.length && !info.magaza) { wrap.style.display='none'; return; }
+  wrap.style.display = 'block';
+  wrap.innerHTML = buildReceiptHTML(info.magaza, info.tarih, urunler, info.toplam, info.kdv, info.indirim_toplam, true);
+}
+
+function buildReceiptHTML(magaza, tarih, urunler, toplam, kdv, indirim, showFilters) {
+  const cats = ['Tümü', ...new Set((urunler||[]).map(u => u.kat || 'Diğer'))];
+  const filtersHtml = showFilters && cats.length > 1 ? `
+    <div style="display:flex;gap:6px;padding:8px 12px;overflow-x:auto;border-bottom:1px solid var(--border);" id="receiptFilterBar">
+      ${cats.map((c,i) => `<button onclick="filterReceiptTable('${c}',this)" style="padding:4px 12px;border-radius:20px;font-size:11px;border:1.5px solid var(--border);background:${i===0?'var(--text)':'transparent'};color:${i===0?'white':'var(--text-mid)'};cursor:pointer;white-space:nowrap;font-family:Inter,sans-serif;">${c}</button>`).join('')}
+    </div>` : '';
+
+  const headerHtml = `
+    <div style="padding:12px 14px 8px;border-bottom:1px solid var(--border);">
+      <div style="font-size:11px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-soft);">Fiş Detayı</div>
+      ${magaza ? '<div style="font-size:15px;font-weight:700;margin-top:4px;">'+magaza+'</div>' : ''}
+      ${tarih ? '<div style="font-size:12px;color:var(--text-soft);margin-top:2px;">📅 '+tarih+'</div>' : ''}
+    </div>`;
+
+  const tableHtml = `
+    <div id="receiptItemsTable">
+      <table style="width:100%;border-collapse:collapse;">
+        <thead>
+          <tr style="background:var(--bg);">
+            <th style="padding:7px 10px;font-size:10px;font-weight:600;text-align:left;color:var(--text-soft);letter-spacing:0.05em;text-transform:uppercase;">Ürün</th>
+            <th style="padding:7px 6px;font-size:10px;font-weight:600;text-align:center;color:var(--text-soft);letter-spacing:0.05em;text-transform:uppercase;">Miktar</th>
+            <th style="padding:7px 6px;font-size:10px;font-weight:600;text-align:right;color:var(--text-soft);letter-spacing:0.05em;text-transform:uppercase;">B.Fiyat</th>
+            <th style="padding:7px 6px;font-size:10px;font-weight:600;text-align:right;color:var(--warn);letter-spacing:0.05em;text-transform:uppercase;">İnd.</th>
+            <th style="padding:7px 10px 7px 6px;font-size:10px;font-weight:600;text-align:right;color:var(--text-soft);letter-spacing:0.05em;text-transform:uppercase;">Toplam</th>
+          </tr>
+        </thead>
+        <tbody id="receiptTbody">
+          ${buildReceiptRows(urunler)}
+        </tbody>
+      </table>
+    </div>`;
+
+  const footerHtml = `
+    <div style="background:var(--bg);border-top:1px solid var(--border);">
+      ${indirim && parseFloat(indirim) > 0 ? '<div style="padding:6px 14px;display:flex;justify-content:space-between;"><span style="font-size:12px;color:var(--green);">Toplam İndirim</span><span style="font-size:12px;font-weight:600;color:var(--green);">-₺'+indirim+'</span></div>' : ''}
+      ${kdv ? '<div style="padding:6px 14px;display:flex;justify-content:space-between;"><span style="font-size:12px;color:var(--text-mid);">KDV</span><span style="font-size:12px;color:var(--text-mid);">₺'+kdv+'</span></div>' : ''}
+      ${toplam ? '<div style="padding:10px 14px;display:flex;justify-content:space-between;border-top:1px solid var(--border);"><span style="font-size:14px;font-weight:700;">Toplam</span><span style="font-size:18px;font-weight:700;color:var(--orange);">₺'+toplam+'</span></div>' : ''}
+    </div>`;
+
+  return headerHtml + filtersHtml + tableHtml + footerHtml;
+}
+
+function buildReceiptRows(urunler, filterCat) {
+  const filtered = filterCat && filterCat !== 'Tümü' ? urunler.filter(u => (u.kat||'Diğer') === filterCat) : urunler;
+  if (!filtered.length) return '<tr><td colspan="5" style="padding:16px;text-align:center;color:var(--text-soft);font-size:13px;">Ürün bulunamadı.</td></tr>';
+  return filtered.map(u => {
+    const hasIndirim = u.indirim && parseFloat(u.indirim) > 0;
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:8px 10px;">
+        <div style="font-size:13px;font-weight:500;color:var(--text);">${u.ad||'-'}</div>
+        <div style="font-size:10px;color:var(--text-soft);margin-top:2px;">${u.kat||''}</div>
+      </td>
+      <td style="padding:8px 6px;text-align:center;font-size:12px;color:var(--text-mid);white-space:nowrap;">${u.miktar||'-'} ${u.birim||''}</td>
+      <td style="padding:8px 6px;text-align:right;font-size:12px;color:var(--text-mid);">${u.birim_fiyat ? '₺'+u.birim_fiyat : '-'}</td>
+      <td style="padding:8px 6px;text-align:right;font-size:12px;color:var(--green);">${hasIndirim ? '-₺'+u.indirim : ''}</td>
+      <td style="padding:8px 10px 8px 6px;text-align:right;font-size:13px;font-weight:600;color:var(--text);">${u.toplam ? '₺'+u.toplam : '-'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function filterReceiptTable(cat, btn) {
+  // Update filter buttons
+  const bar = document.getElementById('receiptFilterBar');
+  if (bar) bar.querySelectorAll('button').forEach(b => {
+    b.style.background = b === btn ? 'var(--text)' : 'transparent';
+    b.style.color = b === btn ? 'white' : 'var(--text-mid)';
+  });
+  // Re-render rows from currentReceiptItems
+  const tbody = document.getElementById('receiptTbody');
+  if (tbody) tbody.innerHTML = buildReceiptRows(currentReceiptItems, cat);
+}
+
+
+function resetForm() {
+  currentPhoto = null;
+  currentReceiptItems = [];
+  currentMagaza = '';
+  currentReceiptMeta = {};
+  isScanning = false;
+  const area = document.getElementById('photoArea');
+  area.classList.remove('has-photo');
+  area.style.position = '';
+  area.innerHTML = '<div class="photo-area-icon">📷</div><div class="photo-area-text">Fotoğraf Çek veya Seç</div><div class="photo-area-sub">Fiş, fatura veya ekran görüntüsü</div>';
+  document.getElementById('amountInput').value = '';
+  document.getElementById('noteInput').value = '';
+  document.getElementById('dateInput').value = new Date().toISOString().slice(0,16);
+  const wrap = document.getElementById('receiptTableWrap');
+  if (wrap) wrap.style.display = 'none';
+  const btn = document.getElementById('saveBtnMain');
+  if (btn) { btn.disabled=false; btn.textContent='Kaydet'; btn.style.opacity='1'; }
+  document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+  const orangePill = document.querySelector('#screen-new .cat-pill.orange');
+  if (orangePill) orangePill.classList.add('active');
+  selectedCat='Harcama'; selectedCatColor='orange';
+}
+
+function formatDate(iso) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('tr-TR') + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+}
+
+function parseAmount(str) {
+  if (!str) return 0;
+  // ₺ sembolünü ve boşlukları temizle
+  let clean = String(str).replace(/[₺\s]/g, '');
+  // Türkçe format: 1.234,56 -> binlik nokta, ondalık virgül
+  const lastComma = clean.lastIndexOf(',');
+  const lastDot = clean.lastIndexOf('.');
+  if (lastComma > lastDot) {
+    // virgül ondalık ayracı
+    clean = clean.replace(/\./g, '').replace(',', '.');
+  } else if (lastDot > lastComma && lastComma !== -1) {
+    // nokta ondalık ayracı, virgül binlik
+    clean = clean.replace(/,/g, '');
+  }
+  const val = parseFloat(clean);
+  return isNaN(val) ? 0 : val;
+}
+
+function updateDashboard() {
+  const name = settings.name || 'İsmail';
+  document.getElementById('dashName').textContent = name;
+  document.getElementById('dashAvatar').textContent = name[0].toUpperCase();
+
+  const days=['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+  const months=['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+  const now = new Date();
+  document.getElementById('dateBadge').textContent = '📅 ' + days[now.getDay()] + ', ' + now.getDate() + ' ' + months[now.getMonth()] + ' ' + now.getFullYear();
+
+  const today = now.toDateString();
+  const todayR = records.filter(r => new Date(r.date).toDateString() === today);
+  const spending = todayR.filter(r => r.cat==='Harcama');
+  const calR = todayR.filter(r => r.cat==='Beslenme');
+  const totalSpend = spending.reduce((s,r) => s + parseAmount(r.amount), 0);
+  const totalCal = calR.reduce((s,r) => s + (parseFloat(r.amount) || 0), 0);
+
+  document.getElementById('totalSpend').textContent = '₺' + totalSpend.toFixed(2).replace('.',',');
+  document.getElementById('spendCount').textContent = spending.length + ' işlem';
+  document.getElementById('totalCal').textContent = Math.round(totalCal).toLocaleString('tr-TR');
+
+  const left = settings.cal - totalCal;
+  const calEl = document.getElementById('calLeft');
+  calEl.innerHTML = left >= 0 ? '<span class="down">↓ ' + Math.round(left) + ' kaldı</span>' : '<span class="up">↑ ' + Math.round(-left) + ' aşıldı</span>';
+
+  // Uyarı
+  const alert = document.getElementById('alertBand');
+  const thisMonth = records.filter(r => { const d=new Date(r.date); return d.getMonth()===now.getMonth() && d.getFullYear()===now.getFullYear() && r.cat==='Harcama'; });
+  const monthTotal = thisMonth.reduce((s,r) => s + parseAmount(r.amount), 0);
+  if (monthTotal > settings.budget * 0.8) {
+    alert.style.display = 'flex';
+    document.getElementById('alertText').textContent = 'Aylık bütçenin %' + Math.round(monthTotal/settings.budget*100) + "'ini harcadın. Dikkat!";
+  } else { alert.style.display = 'none'; }
+
+  // Son kayıtlar
+  const list = document.getElementById('recentRecords');
+  const icons = {Harcama:'🧾', Beslenme:'🍱', Enerji:'⚡'};
+  if (!records.length) {
+    list.innerHTML = '<div style="text-align:center;padding:24px;color:var(--text-soft);font-size:13px;">Henüz kayıt yok. + butonuna basarak başla.</div>';
+    return;
+  }
+  list.innerHTML = records.slice(0,3).map(r => buildRecordCard(r)).join('');
+}
+
+function buildChart() {
+  const container = document.getElementById('chartBars');
+  container.innerHTML = '';
+  const dayNames = ['Pzt','Sal','Çar','Per','Cum','Cmt','Paz'];
+  const todayDay = new Date().getDay() === 0 ? 6 : new Date().getDay()-1;
+  const demo = {orange:[55,70,40,85,60,90,75], green:[60,55,80,50,70,45,68], blue:[40,60,50,65,55,70,50]};
+  dayNames.forEach((day,i) => {
+    const group = document.createElement('div'); group.className = 'bar-group';
+    const stack = document.createElement('div'); stack.className = 'bar-stack';
+    ['orange','green','blue'].forEach(c => {
+      const bar = document.createElement('div'); bar.className = 'bar '+c;
+      bar.style.height = Math.round(demo[c][i]/90*58)+'px';
+      stack.appendChild(bar);
+    });
+    const lbl = document.createElement('div');
+    lbl.className = 'bar-day'+(i===todayDay?' today':'');
+    lbl.textContent = day;
+    group.appendChild(stack); group.appendChild(lbl);
+    container.appendChild(group);
+  });
+}
+
+function buildRecordCard(r) {
+  const icons = {Harcama:'🧾', Beslenme:'🍱', Enerji:'⚡'};
+  const thumb = r.photo
+    ? '<img src="'+r.photo+'" style="width:42px;height:42px;border-radius:9px;object-fit:cover;">'
+    : icons[r.cat];
+
+  const urunler = r.receiptItems || [];
+  const meta = r.receiptMeta || {};
+  let tableHtml = '';
+  if (urunler.length) {
+    const cats = ['Tümü', ...new Set(urunler.map(u => u.kat || 'Diğer'))];
+    const uid = 'rc_' + r.id;
+    const filtersHtml = cats.length > 1 ? `<div style="display:flex;gap:6px;padding:8px 10px;overflow-x:auto;" id="bar_${uid}">
+      ${cats.map((c,i) => `<button onclick="event.stopPropagation();filterCard('${uid}',${JSON.stringify(urunler)},'${c}',this)" style="padding:4px 10px;border-radius:20px;font-size:11px;border:1.5px solid var(--border);background:${i===0?'var(--text)':'transparent'};color:${i===0?'white':'var(--text-mid)'};cursor:pointer;white-space:nowrap;font-family:Inter,sans-serif;">${c}</button>`).join('')}
+    </div>` : '';
+
+    tableHtml = `<div class="receipt-table" style="display:none;margin-top:8px;background:var(--bg);border-radius:10px;overflow:hidden;border:1px solid var(--border);">
+      ${filtersHtml}
+      <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;" id="tbl_${uid}">
+        <thead><tr style="background:var(--card);">
+          <th style="padding:6px 8px;font-size:10px;font-weight:600;text-align:left;color:var(--text-soft);white-space:nowrap;">Ürün</th>
+          <th style="padding:6px 4px;font-size:10px;font-weight:600;text-align:center;color:var(--text-soft);white-space:nowrap;">Miktar</th>
+          <th style="padding:6px 4px;font-size:10px;font-weight:600;text-align:right;color:var(--text-soft);white-space:nowrap;">B.Fiyat</th>
+          <th style="padding:6px 4px;font-size:10px;font-weight:600;text-align:right;color:var(--warn);white-space:nowrap;">İnd.</th>
+          <th style="padding:6px 8px 6px 4px;font-size:10px;font-weight:600;text-align:right;color:var(--text-soft);white-space:nowrap;">Toplam</th>
+        </tr></thead>
+        <tbody id="tbody_${uid}">${buildReceiptRows(urunler)}</tbody>
+      </table>
+      </div>
+      ${meta.indirim && parseFloat(meta.indirim)>0 ? '<div style="padding:5px 10px;display:flex;justify-content:space-between;border-top:1px solid var(--border);"><span style="font-size:11px;color:var(--green);">Toplam İndirim</span><span style="font-size:11px;font-weight:600;color:var(--green);">-₺'+meta.indirim+'</span></div>' : ''}
+      ${meta.kdv ? '<div style="padding:5px 10px;display:flex;justify-content:space-between;"><span style="font-size:11px;color:var(--text-mid);">KDV</span><span style="font-size:11px;color:var(--text-mid);">₺'+meta.kdv+'</span></div>' : ''}
+    </div>`;
+  }
+
+  const chevron = urunler.length ? '<span style="font-size:10px;color:var(--text-soft);margin-left:5px;" class="chevron">▼</span>' : '';
+
+  return '<div class="record-item" style="flex-direction:column;align-items:stretch;gap:0;" onclick="toggleReceipt(this)">'
+    + '<div style="display:flex;align-items:center;gap:12px;">'
+    + '<div class="record-thumb '+r.catColor+'-bg">'+thumb+'</div>'
+    + '<div class="record-info">'
+    + '<div class="record-title">'+(r.magaza||r.subCat)+chevron+'</div>'
+    + '<div class="record-meta">'+formatDate(r.date)+(r.note?' · '+r.note.slice(0,40):'')+'</div>'
+    + '</div>'
+    + '<div class="record-amount '+r.catColor+'">'+r.amount+'</div>'
+    + '</div>'
+    + tableHtml
+    + '</div>';
+}
+
+function filterCard(uid, urunler, cat, btn) {
+  const bar = document.getElementById('bar_'+uid);
+  if (bar) bar.querySelectorAll('button').forEach(b => {
+    b.style.background = b===btn ? 'var(--text)' : 'transparent';
+    b.style.color = b===btn ? 'white' : 'var(--text-mid)';
+  });
+  const tbody = document.getElementById('tbody_'+uid);
+  if (tbody) tbody.innerHTML = buildReceiptRows(urunler, cat);
+}
+
+
+function toggleReceipt(el) {
+  const table = el.querySelector('.receipt-table');
+  if (!table) return;
+  const isOpen = table.style.display !== 'none';
+  table.style.display = isOpen ? 'none' : 'block';
+  const chevron = el.querySelector('.chevron');
+  if (chevron) chevron.textContent = isOpen ? '▼' : '▲';
+}
+
+function renderArchive() {
+  const list = document.getElementById('archiveList');
+  const filtered = currentFilter==='Tümü' ? records : records.filter(r => r.cat===currentFilter);
+  if (!filtered.length) { list.innerHTML='<div style="text-align:center;padding:40px;color:var(--text-soft);font-size:13px;">Kayıt bulunamadı.</div>'; return; }
+  const icons = {Harcama:'🧾', Beslenme:'🍱', Enerji:'⚡'};
+  list.innerHTML = filtered.map(r => buildRecordCard(r)).join('');
+}
+
+function filterArchive(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  renderArchive();
+}
+
+async function runAnalysis() {
+  const btnTxt = document.getElementById('analysisBtnTxt');
+  const loading = document.getElementById('analysisLoading');
+  const cards = document.getElementById('adviceCards');
+  btnTxt.textContent = 'Analiz yapılıyor…';
+  loading.classList.add('show'); cards.innerHTML = '';
+
+  const summary = records.slice(0,30).map(r => r.cat+'/'+r.subCat+': '+r.amount+' ('+formatDate(r.date)+')').join('\n') || 'Henüz kayıt yok.';
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({
+        model:'claude-sonnet-4-6', max_tokens:1000,
+        messages:[{role:'user', content:'Sen bir yaşam koçusun. Kullanıcının tüketim kayıtlarını analiz edip 3-4 kısa somut Türkçe tavsiye ver.\nKayıtlar:\n'+summary+'\n\nSadece JSON döndür, başka bir şey yazma:\n[{"tip":"başlık","text":"tavsiye","type":"good|warn|info"}]'}]
+      })
+    });
+    const data = await res.json();
+    if (data.error) throw new Error(data.error.message);
+    const raw = data.content?.[0]?.text || '[]';
+    const advices = JSON.parse(raw.replace(/```json|```/g,'').trim());
+    if (!Array.isArray(advices) || !advices.length) throw new Error('Boş yanıt');
+    loading.classList.remove('show');
+    cards.innerHTML = advices.map(a => `
+      <div class="advice-card ${a.type==='warn'?'warn':a.type==='info'?'blue':''}">
+        <div class="advice-title">${a.type==='warn'?'⚠️':a.type==='info'?'ℹ️':'✅'} ${a.tip}</div>
+        <div class="advice-text">${a.text}</div>
+      </div>`).join('');
+  } catch(e) {
+    loading.classList.remove('show');
+    cards.innerHTML = '<div class="advice-card warn"><div class="advice-title">⚠️ Bağlantı hatası</div><div class="advice-text">AI analizine ulaşılamadı. İnternet bağlantını kontrol et.</div></div>';
+  }
+  btnTxt.textContent = 'Tekrar Analiz Et';
+}
+
+function loadSettings() {
+  document.getElementById('userName').value = settings.name || '';
+  document.getElementById('budgetGoal').value = settings.budget || 10000;
+  document.getElementById('calGoal').value = settings.cal || 2000;
+}
+
+function saveSettings() {
+  settings = {
+    name: document.getElementById('userName').value || 'İsmail',
+    budget: parseFloat(document.getElementById('budgetGoal').value) || 10000,
+    cal: parseFloat(document.getElementById('calGoal').value) || 2000
+  };
+  localStorage.setItem('tx_settings', JSON.stringify(settings));
+  showToast('Ayarlar kaydedildi ✓');
+}
+
+// BAŞLAT
+document.getElementById('dateInput').value = new Date().toISOString().slice(0,16);
+updateDashboard();
+buildChart();
+</script>
+</body>
+</html>
